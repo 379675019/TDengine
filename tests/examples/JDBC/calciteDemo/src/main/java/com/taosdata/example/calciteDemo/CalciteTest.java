@@ -1,4 +1,4 @@
-package com.taosdata.jdbc.cases;
+package com.taosdata.example.calciteDemo;
 
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.jdbc.CalciteConnection;
@@ -13,8 +13,8 @@ public class CalciteTest {
 
     public static void main(String[] args) throws SqlParseException, ClassNotFoundException, SQLException {
 
-//        CalciteConnection calciteConnection = testMyqsl();
-        CalciteConnection calciteConnection = testTSDB();
+        CalciteConnection calciteConnection = testMyqsl();
+//        CalciteConnection calciteConnection = testTSDB();
 
         Statement statement = calciteConnection.createStatement();
         ResultSet resultSet = statement.executeQuery("select * from test.t");

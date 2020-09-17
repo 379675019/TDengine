@@ -14,9 +14,9 @@
  *****************************************************************************/
 package com.taosdata.jdbc;
 
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +43,7 @@ import java.util.logging.Logger;
  * register a driver by doing Class.forName("foo.bah.Driver")
  */
 public class TSDBDriver implements java.sql.Driver {
+
 
     @Deprecated
     private static final String URL_PREFIX1 = "jdbc:TSDB://";
@@ -78,6 +79,7 @@ public class TSDBDriver implements java.sql.Driver {
      */
     public static final String PROPERTY_KEY_USER = "user";
 
+
     /**
      * Key for the configuration file directory of TSDB client in properties instance
      */
@@ -100,6 +102,7 @@ public class TSDBDriver implements java.sql.Driver {
     public static final String PROPERTY_KEY_CHARSET = "charset";
 
     public static final String PROPERTY_KEY_PROTOCOL = "protocol";
+
 
     /**
      * Index for port coming out of parseHostPortPair().
@@ -241,7 +244,7 @@ public class TSDBDriver implements java.sql.Driver {
     }
 
     public boolean acceptsURL(String url) throws SQLException {
-        return StringUtils.isNotBlank(url) && url.startsWith(URL_PREFIX);
+        return (url != null && url.length() > 0 && url.trim().length() > 0) && url.toLowerCase().startsWith(URL_PREFIX);
     }
 
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
@@ -288,7 +291,8 @@ public class TSDBDriver implements java.sql.Driver {
             return null;
         }
 
-        if (!StringUtils.startsWithIgnoreCase(url, URL_PREFIX) && !StringUtils.startsWithIgnoreCase(url, URL_PREFIX1)) {
+        String lowerUrl = url.toLowerCase();
+        if (!lowerUrl.startsWith(URL_PREFIX) && !lowerUrl.startsWith(URL_PREFIX1)) {
             return null;
         }
 
