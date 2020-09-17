@@ -5,7 +5,8 @@ import com.taosdata.jdbc.springbootdemo.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.sql.Timestamp;
+import java.util.*;
 
 @RequestMapping("/weather")
 @RestController
@@ -57,8 +58,32 @@ public class WeatherController {
      */
     @PostMapping("/batch")
     public int batchSaveWeather(@RequestBody List<Weather> weatherList) {
-
         return weatherService.save(weatherList);
+    }
+
+    @GetMapping("/batchInsertTest")
+    public int batchInsertTest(@RequestParam("records") int records, @RequestParam("batchSize") int batchSize) {
+        List<Weather> weatherList = new ArrayList<>();
+
+        long startTime = System.currentTimeMillis();
+        Random random = new Random(startTime);
+        for (int i = 0; i < records; i++) {
+            Weather weather = new Weather();
+            weather.setTs(new Timestamp(new Date(startTime++).getTime()));
+            weather.setTemperature(random.nextInt(50));
+            weather.setHumidity(random.nextInt(100));
+            weatherList.add(weather);
+        }
+
+        int rowCnt = 0;
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < records; i += batchSize) {
+            rowCnt += weatherService.save(weatherList.subList(i, i + batchSize));
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Time Cost: " + (end - start) + " ms.");
+
+        return rowCnt;
     }
 
 }

@@ -16,4 +16,6 @@ public interface WeatherMapper {
     void createDB();
 
     void createTable();
+
+    void dropTable();
 }

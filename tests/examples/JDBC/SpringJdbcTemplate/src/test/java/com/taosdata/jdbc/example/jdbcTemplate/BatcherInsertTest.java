@@ -7,6 +7,7 @@ import com.taosdata.jdbc.example.jdbcTemplate.domain.Weather;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.omg.Messaging.SYNC_WITH_TRANSPORT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -28,8 +29,9 @@ public class BatcherInsertTest {
     @Autowired
     private ExecuteAsStatement executor;
 
-    private static final int numOfRecordsPerTable = 1000;
-    private static long ts = 1496732686000l;
+    private static final int numOfRecordsPerTable = 10;
+    private static final int batchSize = 2;
+
     private static Random random = new Random(System.currentTimeMillis());
 
     @Before
@@ -40,12 +42,15 @@ public class BatcherInsertTest {
         executor.doExecute("create database if not exists test");
         //use database
         executor.doExecute("use test");
+        //use database
+        executor.doExecute("drop table if exists test.weather");
         // create table
-        executor.doExecute("create table if not exists test.weather (ts timestamp, temperature int, humidity float)");
+        executor.doExecute("create table if not exists test.weather (ts timestamp, temperature float, humidity int)");
     }
 
     @Test
     public void batchInsert() {
+        long ts = System.currentTimeMillis();
         List<Weather> weatherList = new ArrayList<>();
         for (int i = 0; i < numOfRecordsPerTable; i++) {
             ts += 1000;
@@ -53,7 +58,9 @@ public class BatcherInsertTest {
             weatherList.add(weather);
         }
         long start = System.currentTimeMillis();
-        weatherDao.batchInsert(weatherList);
+        for (int i = 0; i < numOfRecordsPerTable; i += batchSize) {
+            weatherDao.batchInsert(weatherList.subList(i, i + batchSize));
+        }
         long end = System.currentTimeMillis();
         System.out.println("batch insert(" + numOfRecordsPerTable + " rows) time cost ==========> " + (end - start) + " ms");
 

@@ -15,6 +15,7 @@ public class WeatherService {
 
     public boolean init() {
         weatherMapper.createDB();
+        weatherMapper.dropTable();
         weatherMapper.createTable();
         return true;
     }
