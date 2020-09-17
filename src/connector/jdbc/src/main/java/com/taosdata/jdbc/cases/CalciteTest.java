@@ -44,7 +44,7 @@ public class CalciteTest {
         // JDBC adapter
         Class.forName("com.mysql.jdbc.Driver");
         BasicDataSource dataSource = new BasicDataSource();
-        dataSource.setUrl("jdbc:mysql://192.168.236.135:3306/test");
+        dataSource.setUrl("jdbc:mysql://192.168.236.135:3306/test?useSSL=false&useUnicode=true&characterEncoding=UTF-8");
         dataSource.setUsername("root");
         dataSource.setPassword("123456");
         JdbcSchema schema = JdbcSchema.create(rootSchema, "test", dataSource, null, "test");

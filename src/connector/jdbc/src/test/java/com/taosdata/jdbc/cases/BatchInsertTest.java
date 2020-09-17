@@ -20,11 +20,9 @@ public class BatchInsertTest {
 
     static String host = "localhost";
     static String dbName = "test";
-    static String stbName = "meters";
-    static int numOfTables = 30;
-    final static int numOfRecordsPerTable = 1000;
+    final static int numOfRecordsPerTable = 100000;
+    final static int valuesSize = 1;
     static long ts = 1496732686000l;
-    final static String tablePrefix = "t";
 
     private Connection connection;
 
@@ -33,65 +31,43 @@ public class BatchInsertTest {
         try {
             connection = TSDBCommon.getConn(host);
             TSDBCommon.createDatabase(connection, dbName);
-            TSDBCommon.createStable(connection, stbName);
-            TSDBCommon.createTables(connection, numOfTables, stbName, tablePrefix);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("create table if not exists " + dbName + ".weather(ts timestamp, temperature float, humidity int)");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private static Random rand = new Random(System.currentTimeMillis());
+
     @Test
-    public void testBatchInsert(){
-        ExecutorService executorService = Executors.newFixedThreadPool(numOfTables);
-        for (int i = 0; i < numOfTables; i++) {
-            final int index = i;
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        long startTime = System.currentTimeMillis();
-                        Statement statement = connection.createStatement(); // get statement
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("INSERT INTO " + tablePrefix + index + " VALUES");
-                        Random rand = new Random();
-                        for (int j = 1; j <= numOfRecordsPerTable; j++) {
-                            sb.append("(" + (ts + j) + ", ");
-                            sb.append(rand.nextInt(100) + ", ");
-                            sb.append(rand.nextInt(100) + ", ");
-                            sb.append(rand.nextInt(100) + ")");
-                        }
-                        statement.addBatch(sb.toString());
-                        statement.executeBatch();
-                        long endTime = System.currentTimeMillis();
-                        System.out.println("Thread " + index + " takes " + (endTime - startTime) +  " microseconds");
-                        connection.commit();
-                        statement.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-        }
-
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        try{
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery("select * from meters");
-            int num = 0;
-            while (rs.next()) {
-                num++;
+    public void testBatchInsert() {
+        int count = 0;
+        int rowCnt = 0;
+        long startTime = System.currentTimeMillis();
+        while (count < numOfRecordsPerTable) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("INSERT INTO " + dbName + ".weather(ts, temperature, humidity) VALUES");
+            for (int j = 0; j < valuesSize; j++) {
+                sb.append("(" + (ts + count++) + ", ");
+                sb.append(rand.nextInt(50) + ", ");
+                sb.append(rand.nextInt(100) + ")");
             }
-            assertEquals(num, numOfTables * numOfRecordsPerTable);
-            rs.close();
-        }catch (Exception e){
+//            System.out.println(sb.toString());
+            rowCnt += execute(sb.toString());
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("insert " + rowCnt + " records with time cost: " + (endTime - startTime) + " microseconds");
+    }
+
+    private int execute(String sql) {
+        try (Statement statement = connection.createStatement()) {
+            return statement.executeUpdate(sql);
+        } catch (SQLException e) {
             e.printStackTrace();
         }
+        return 0;
     }
 
     @After
